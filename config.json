@@ -1,6 +1,12 @@
 {
   "upstream_key": "",
   "upstream_host": "wss://tokyo.coinlisting.pro",
+  "bot": {
+    "token": "",
+    "allowed_ids": [],
+    "admin_key": "sk-pro-changeme",
+    "server_url": "http://localhost:8080"
+  },
   "keys": {
     "sk-pro-changeme": {
       "username": "user_pro",

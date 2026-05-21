@@ -17,18 +17,40 @@ HOST=$(curl -s --max-time 4 ifconfig.me 2>/dev/null \
 # ── banner ────────────────────────────────────────────────────────────────────
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║            CoinListing Proxy API — ready to use             ║"
+echo "║         CoinListing Proxy API + Telegram Bot                ║"
 echo "╠══════════════════════════════════════════════════════════════╣"
 printf  "║  WebSocket /listings  →  ws://%-31s║\n" "${HOST}:${PORT}/listings?key=YOUR_KEY"
 printf  "║  WebSocket /feed      →  ws://%-31s║\n" "${HOST}:${PORT}/feed?key=YOUR_KEY"
 printf  "║  History HTTP         →  http://%-29s║\n" "${HOST}:${PORT}/history?key=YOUR_KEY"
 printf  "║  Health check         →  http://%-29s║\n" "${HOST}:${PORT}/health"
 echo "╠══════════════════════════════════════════════════════════════╣"
-printf  "║  Config file: %-47s║\n" "${CONFIG_FILE}"
-printf  "║  Port:        %-47s║\n" "${PORT}"
+printf  "║  Config:  %-51s║\n" "${CONFIG_FILE}"
+printf  "║  Port:    %-51s║\n" "${PORT}"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
-echo "[*] Starting server..."
-echo ""
 
-exec uvicorn server:app --host 0.0.0.0 --port "$PORT" --log-level info
+# ── graceful shutdown ─────────────────────────────────────────────────────────
+cleanup() {
+    echo ""
+    echo "[*] Shutting down..."
+    kill "$SERVER_PID" "$BOT_PID" 2>/dev/null || true
+    wait "$SERVER_PID" "$BOT_PID" 2>/dev/null || true
+    echo "[*] Done"
+    exit 0
+}
+trap cleanup SIGINT SIGTERM
+
+# ── start API server ──────────────────────────────────────────────────────────
+echo "[*] Starting API server on port ${PORT}..."
+uvicorn server:app --host 0.0.0.0 --port "$PORT" --log-level info &
+SERVER_PID=$!
+
+# ── start Telegram bot ────────────────────────────────────────────────────────
+echo "[*] Starting Telegram bot..."
+python bot.py &
+BOT_PID=$!
+
+# ── wait ──────────────────────────────────────────────────────────────────────
+echo "[*] Both processes running. Press Ctrl+C to stop."
+echo ""
+wait "$SERVER_PID" "$BOT_PID"
