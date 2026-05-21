@@ -1,0 +1,26 @@
+{
+  "upstream_key": "",
+  "upstream_host": "wss://tokyo.coinlisting.pro",
+  "keys": {
+    "sk-pro-changeme": {
+      "username": "user_pro",
+      "tier": "pro",
+      "expiry": "2099-12-31 00:00:00"
+    },
+    "sk-basic-changeme": {
+      "username": "user_basic",
+      "tier": "basic",
+      "expiry": "2099-12-31 00:00:00"
+    },
+    "sk-trial-changeme": {
+      "username": "user_trial",
+      "tier": "trial",
+      "expiry": "2099-12-31 00:00:00"
+    },
+    "sk-free-changeme": {
+      "username": "user_free",
+      "tier": "free",
+      "expiry": "2099-12-31 00:00:00"
+    }
+  }
+}
