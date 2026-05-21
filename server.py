@@ -75,11 +75,15 @@ async def _upstream_loop(url: str, channel: str) -> None:
                     if e.code == 1008:
                         print(f"[upstream/{channel}] auth error: {e.reason} — stopping")
                         return
-                    print(f"[upstream/{channel}] closed ({e.code}), retry in {backoff}s")
-                except Exception as exc:
-                    print(f"[upstream/{channel}] error: {exc}")
+                    # re-raise so __aiter__ treats it as fatal and exits the
+                    # async-for loop — the outer while-True then applies backoff
+                    raise
+        except websockets.ConnectionClosedError as e:
+            if e.code == 1008:
+                return
+            print(f"[upstream/{channel}] closed ({e.code}), retry in {backoff}s")
         except Exception as exc:
-            print(f"[upstream/{channel}] connect error: {exc}")
+            print(f"[upstream/{channel}] connect error: {exc}, retry in {backoff}s")
         await asyncio.sleep(backoff)
         backoff = min(backoff * 2, 30)
 
@@ -188,6 +192,8 @@ async def _handle_ws(ws: WebSocket, channel: str) -> None:
         _active_connections[api_key] = [
             w for w in _active_connections[api_key] if w is not ws
         ]
+        if not _active_connections[api_key]:
+            del _active_connections[api_key]
 
 
 @app.websocket("/feed")
